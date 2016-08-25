@@ -1,3 +1,5 @@
+import string
+
 import rformat
 
 import pytest
@@ -27,3 +29,22 @@ def test_exceptions():
 def test_cycles():
   with pytest.raises(rformat.DepthExceeded):
     rformat.format('{names[{index}]}', index='john', names={'john': '{names[{index}]}'})
+
+
+def test_custom_formatter():
+  def iterable_formatter(value, format_spec):
+    if isinstance(value, (list, tuple, dict)):
+      return ','.join(format(v) for v in value)
+    else:
+      return format(value, format_spec)
+
+  subnets = {'subnet-one': 'one', 'subnet-two': 'two'}
+
+  # unwraps iterable
+  formatter = rformat.RecursiveFormatter(formatter=iterable_formatter)
+  assert formatter.format('{subnets}', subnets=subnets) in (
+      'subnet-one,subnet-two', 'subnet-two,subnet-one')
+
+  # leaves iterable alone
+  formatter = string.Formatter()
+  assert formatter.format('{subnets}', subnets=subnets) == repr(subnets)

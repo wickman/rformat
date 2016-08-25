@@ -6,8 +6,9 @@ class DepthExceeded(Exception):
 
 
 class RecursiveFormatter(Formatter):
-  def __init__(self, maxdepth=100):
+  def __init__(self, maxdepth=100, formatter=format):
     self.__max_depth = maxdepth
+    self.__formatter = formatter
 
   def _contains_underformatted_field_names(self, format_tuple):
     literal_text, field_name, format_spec, conversion = format_tuple
@@ -51,6 +52,9 @@ class RecursiveFormatter(Formatter):
         return format_string
 
     raise DepthExceeded('Failed to interpolate string in {0} iterations'.format(self.__max_depth))
+
+  def format_field(self, value, format_spec):
+    return self.__formatter(value, format_spec)
 
 
 def format(fmt_str, *args, **kw):
